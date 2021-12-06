@@ -89,7 +89,10 @@ public:
 	void remove_group(uint32_t group_id)
 	{
 		std::lock_guard<std::mutex> lock_group(task_group_mutex);
-		task_group.erase(group_id);
+		if (group_id == current_group_iter->first)
+			current_group_iter = task_group.erase(current_group_iter);
+		else
+			task_group.erase(group_id);
 	}
 
 private:
