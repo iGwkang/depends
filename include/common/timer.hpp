@@ -1,6 +1,7 @@
 //
-// Created by Gwkang on 2021/11/25.
+// Created by Gwkang on 2021/12/08.
 //
+
 #pragma once
 
 #include <cstdint>
@@ -10,8 +11,7 @@
 #include <atomic>
 #include <queue>
 #include <chrono>
-#include <utility>
-#include <type_traits>
+#include <memory>
 
 class TimerExecutor
 {

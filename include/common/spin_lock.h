@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿//
+// Created by Gwkang on 2021/12/05.
+//
+
+#pragma once
 
 #include <atomic>
 
