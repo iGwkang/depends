@@ -1,13 +1,8 @@
 ﻿#pragma once
 
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1500)
-#pragma execution_character_set("utf-8")
-#endif
-
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+
 void init_log(const char * logPath, spdlog::level::level_enum logLevel);
 
 #define LOG_DEBUG     SPDLOG_DEBUG
