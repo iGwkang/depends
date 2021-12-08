@@ -233,7 +233,7 @@ public:
 		stop();
 	}
 	template<class Func, class... Args>
-	void start(int ms, Func &&func, Args &&... args)
+	void start(uint32_t ms, Func &&func, Args &&... args)
 	{
 		if (running_.exchange(true))
 			return;
@@ -273,7 +273,7 @@ public:
 
 	void set_interval(uint32_t ms)
 	{
-		if (interval_ == ms || !running_ || !repeat_)
+		if (ms == 0 || interval_ == ms || !running_ || !repeat_)
 			return;
 
 		interval_ = ms;
