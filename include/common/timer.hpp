@@ -18,6 +18,7 @@ class TimerExecutor
 	struct TimerTask
 	{
 		TimerTask() = default;
+
 		TimerTask(int64_t next_run_time, std::function<void()> &&task, uint32_t interval = 0)
 			: next_run_time(next_run_time), task(std::move(task)), interval(interval)
 		{
@@ -152,7 +153,6 @@ private:
 				if (!active)
 					break;
 
-
 				while (!tasks.empty() && tasks.top()->stoped)
 				{
 					tasks.pop();
@@ -228,14 +228,16 @@ public:
 	{
 
 	}
+
 	~Timer()
 	{
 		stop();
 	}
+
 	template<class Func, class... Args>
 	void start(uint32_t ms, Func &&func, Args &&... args)
 	{
-		if (running_.exchange(true))
+		if (running_->exchange(true))
 			return;
 
 		interval_ = ms;
@@ -243,15 +245,18 @@ public:
 		if (repeat_)
 			timer_id_ = timer_executor_.interval(ms, task_);
 		else
-			timer_id_ = timer_executor_.timeout(ms, [=] {
-			task_();
-			running_ = false;
+			timer_id_ = timer_executor_.timeout(ms, [task = task_, r = running_] {
+			if (*r)
+			{
+				task();
+				*r = false;
+			}
 		});
 	}
 
 	void stop()
 	{
-		if (!running_.exchange(false))
+		if (!running_->exchange(false))
 			return;
 
 		timer_executor_.remove_task(timer_id_);
@@ -259,15 +264,18 @@ public:
 
 	void restart()
 	{
-		if (running_.exchange(true))
+		if (running_->exchange(true))
 			return;
 
 		if (repeat_)
 			timer_id_ = timer_executor_.interval(interval_, task_);
 		else
-			timer_id_ = timer_executor_.timeout(interval_, [=] {
-			task_();
-			running_ = false;
+			timer_id_ = timer_executor_.timeout(interval_, [task = task_, r = running_] {
+			if (*r)
+			{
+				task();
+				*r = false;
+			}
 		});
 	}
 
@@ -285,7 +293,7 @@ private:
 	uint64_t timer_id_{};
 	bool repeat_{};
 	uint32_t interval_{};
-	std::atomic_bool running_{ false };
+	std::shared_ptr <std::atomic_bool> running_{ std::make_shared<std::atomic_bool>(false) };
 	std::function<void()> task_;
 };
 
