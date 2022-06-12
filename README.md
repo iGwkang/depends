@@ -45,3 +45,5 @@ Commonly used C++ open source libraries, most of them are head-only libraries.
 - `thread_pool.h` Grouped task pool.
 
 - `timer.hpp` Timer implemented using `std::priority_queue` and `std::condition_variable`
+
+- `functional_ex.hpp` C++14 lambda implements bind_front. **Known issue: The default parameter is passed into the non-copyable parameter, and the formal parameter must be a reference**
