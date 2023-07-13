@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <type_traits>
+
 #if _WIN32
 #include <cstdlib>
 

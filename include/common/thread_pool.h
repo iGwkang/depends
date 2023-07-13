@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <deque>
 #include <map>
@@ -72,22 +73,10 @@ public:
 			woker.join();
 	}
 
-	void init_group(uint32_t group_id)
+	void add_group(uint32_t group_id)
 	{
 		std::lock_guard<std::mutex> lock_group(task_group_mutex);
 		task_group[group_id];
-	}
-
-	template<class F, class... Args>
-	auto push_front_task(uint32_t group_id, F&& f, Args&&... args)
-	{
-		return enqueue(group_id, true, f, args...);
-	}
-
-	template<class F, class... Args>
-	auto push_back_task(uint32_t group_id, F&& f, Args&&... args)
-	{
-		return enqueue(group_id, false, f, args...);
 	}
 
 	void remove_group(uint32_t group_id)
@@ -99,20 +88,33 @@ public:
 			task_group.erase(group_id);
 	}
 
+	template<class F, class... Args>
+	decltype(auto) push_front_task(uint32_t group_id, F&& f, Args&&... args)
+	{
+		return enqueue(group_id, true, f, std::forward(args)...);
+	}
+
+	template<class F, class... Args>
+	decltype(auto) push_back_task(uint32_t group_id, F&& f, Args&&... args)
+	{
+		return enqueue(group_id, false, f, std::forward(args)...);
+	}
+
 private:
 	template<class F, class... Args>
-	auto enqueue(uint32_t group_id, bool to_front, F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
+	// auto enqueue(uint32_t group_id, bool to_front, F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
+	decltype(auto) enqueue(uint32_t group_id, bool to_front, F&& f, Args&&... args)
 	{
 		using return_type = typename std::result_of<F(Args...)>::type;
+
+		auto task = std::make_shared< std::packaged_task<return_type()> >(
+			std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+			);
 
 		std::lock_guard<std::mutex> lock_group(task_group_mutex);
 		auto iter = task_group.find(group_id);
 		if (iter == task_group.end())
 			throw std::runtime_error("not found group id on ThreadPool");
-
-		auto task = std::make_shared< std::packaged_task<return_type()> >(
-			std::bind(std::forward<F>(f), std::forward<Args>(args)...)
-			);
 
 		std::future<return_type> res = task->get_future();
 		{
